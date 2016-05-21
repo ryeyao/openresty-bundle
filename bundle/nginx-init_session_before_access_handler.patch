@@ -1,0 +1,49 @@
+--- nginx-1.9.7/src/stream/ngx_stream_handler.c	2015-11-24 22:15:50.000000000 +0800
++++ nginx-1.9.7-patched/src/stream/ngx_stream_handler.c	2016-05-19 19:23:07.000000000 +0800
+@@ -146,6 +146,8 @@ ngx_stream_init_connection(ngx_connectio
+     c->log->action = "initializing connection";
+     c->log_error = NGX_ERROR_INFO;
+ 
++    ngx_stream_init_session(c);
++
+     cmcf = ngx_stream_get_module_main_conf(s, ngx_stream_core_module);
+ 
+     if (cmcf->limit_conn_handler) {
+@@ -207,7 +209,7 @@ ngx_stream_init_connection(ngx_connectio
+     }
+ #endif
+ 
+-    ngx_stream_init_session(c);
++    cscf->handler(s);
+ }
+ 
+ 
+@@ -228,7 +230,6 @@ ngx_stream_init_session(ngx_connection_t
+         return;
+     }
+ 
+-    cscf->handler(s);
+ }
+ 
+ 
+@@ -265,6 +266,9 @@ ngx_stream_ssl_init_connection(ngx_ssl_t
+ static void
+ ngx_stream_ssl_handshake_handler(ngx_connection_t *c)
+ {
++    ngx_stream_session_t        *s;
++    ngx_stream_core_srv_conf_t  *cscf;
++
+     if (!c->ssl->handshaked) {
+         ngx_stream_close_connection(c);
+         return;
+@@ -274,7 +278,10 @@ ngx_stream_ssl_handshake_handler(ngx_con
+         ngx_del_timer(c->read);
+     }
+ 
++    cscf = ngx_stream_get_module_srv_conf(s, ngx_stream_core_module);
+     ngx_stream_init_session(c);
++    s = c->data;
++    cscf->handler(s);
+ }
+ 
+ #endif
