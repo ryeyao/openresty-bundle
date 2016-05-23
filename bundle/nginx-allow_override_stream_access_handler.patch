@@ -1,0 +1,13 @@
+--- nginx-1.9.7/src/stream/ngx_stream_access_module.c	2015-11-24 22:15:50.000000000 +0800
++++ nginx-1.9.7-patched/src/stream/ngx_stream_access_module.c	2016-05-23 12:13:38.000000000 +0800
+@@ -445,7 +445,9 @@ ngx_stream_access_init(ngx_conf_t *cf)
+     ngx_stream_core_main_conf_t  *cmcf;
+ 
+     cmcf = ngx_stream_conf_get_module_main_conf(cf, ngx_stream_core_module);
+-    cmcf->access_handler = ngx_stream_access_handler;
++    if (!cmcf->access_handler) {
++        cmcf->access_handler = ngx_stream_access_handler;
++    }
+ 
+     return NGX_OK;
+ }
